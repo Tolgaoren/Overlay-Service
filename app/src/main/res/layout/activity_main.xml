@@ -9,18 +9,18 @@
 
 
     <Button
-        android:id="@+id/openButton"
+        android:id="@+id/startServiceButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Open"
+        android:text="Start Service"
         android:layout_centerInParent="true"/>
 
     <Button
-        android:id="@+id/closeButton"
+        android:id="@+id/stopServiceButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Close"
-        android:layout_below="@id/openButton"
+        android:text="Stop Service"
+        android:layout_below="@id/startServiceButton"
         android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
