@@ -21,33 +21,31 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var bootReceiver: OverlayReceiver
     private var overlayServiceIntent: Intent? = null
-    private lateinit var context : Context
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        context = this@MainActivity
-
         bootReceiver = OverlayReceiver()
         val intentFilter = IntentFilter(Intent.ACTION_BOOT_COMPLETED)
         registerReceiver(bootReceiver, intentFilter)
 
-        overlayServiceIntent = Intent(context, OverlayService::class.java)
+        overlayServiceIntent = Intent(this, OverlayService::class.java)
 
         binding.apply {
             startServiceButton.setOnClickListener {
-                if (!isServiceRunning(context, OverlayService::class.java)) {
+                if (!isServiceRunning(this@MainActivity, OverlayService::class.java)) {
                     startOverlayService()
                 } else {
-                    Toast.makeText(context,"Servis zaten açık!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity,"Servis zaten açık!", Toast.LENGTH_SHORT).show()
                 }
             }
             stopServiceButton.setOnClickListener {
-                if (isServiceRunning(context, OverlayService::class.java)) {
+                if (isServiceRunning(this@MainActivity, OverlayService::class.java)) {
                     stopService(overlayServiceIntent)
                 } else {
-                    Toast.makeText(context, "Servis zaten durdurulmuş.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Servis zaten durdurulmuş.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -55,7 +53,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startOverlayService() {
-        if (Settings.canDrawOverlays(context)) {
+        if (Settings.canDrawOverlays(this)) {
             startService(overlayServiceIntent)
         } else {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
@@ -71,10 +69,10 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == REQUEST_OVERLAY_PERMISSION) {
-            if (Settings.canDrawOverlays(context)) {
+            if (Settings.canDrawOverlays(this)) {
                 startService(overlayServiceIntent)
             } else {
-                Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -92,8 +90,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(bootReceiver)
         stopService(overlayServiceIntent)
+        unregisterReceiver(bootReceiver)
     }
 
 }
