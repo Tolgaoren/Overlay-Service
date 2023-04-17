@@ -14,12 +14,17 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import com.example.overlayservice.R
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class OverlayService: Service() {
+    @Inject
+    lateinit var windowManager: WindowManager
 
-        private lateinit var windowManager: WindowManager
-        private lateinit var overlayView: View
+    @Inject
+    lateinit var inflater: LayoutInflater
+    private lateinit var overlayView: View
         override fun onBind(intent: Intent?): IBinder? {
             return null
         }
