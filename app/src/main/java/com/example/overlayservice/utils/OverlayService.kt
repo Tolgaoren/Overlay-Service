@@ -1,14 +1,14 @@
 package com.example.overlayservice.utils
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
+import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
@@ -25,6 +25,9 @@ class OverlayService: Service() {
     @Inject
     lateinit var inflater: LayoutInflater
     private lateinit var overlayView: View
+    private val handler = Handler()
+    private lateinit var usageStatsManager: UsageStatsManager
+
         override fun onBind(intent: Intent?): IBinder? {
             return null
         }
@@ -35,6 +38,9 @@ class OverlayService: Service() {
 
         override fun onCreate() {
             super.onCreate()
+
+            usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            handler.post(updateTextRunnable)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
@@ -70,26 +76,37 @@ class OverlayService: Service() {
             val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             overlayView = inflater.inflate(R.layout.overlay_layout, null)
 
-            val packageManager = packageManager
-            val packageName = packageName
-            val packageInfo = packageManager.getPackageInfo(packageName, 0)
-
-            val packageNameTextView = overlayView.findViewById<TextView>(R.id.packageNameTextView)
-            packageNameTextView.text = packageInfo.packageName
+            updatePackageNameTextView()
 
             windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             windowManager.addView(overlayView, params)
 
         }
 
-        override fun onDestroy() {
-            super.onDestroy()
-            windowManager.removeViewImmediate(overlayView) //Servisi kapattığımız için package name yazısını da kaldırdık.
+    private val updateTextRunnable = object : Runnable {
+        override fun run() {
+            updatePackageNameTextView()
+            handler.postDelayed(this, 1000) // 1 saniye sonra tekrar çağrılacak
         }
+    }
+    private fun updatePackageNameTextView() {
+        // Get the current top activity
+        val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_BEST, System.currentTimeMillis() - 1000, System.currentTimeMillis())
+        val topActivity = stats?.maxByOrNull { it.lastTimeUsed }?.packageName
+
+        // Update the package name text view
+        val packageNameTextView = overlayView.findViewById<TextView>(R.id.packageNameTextView)
+        packageNameTextView.text = topActivity ?: ""
+    }
+
+
+    override fun onDestroy() {
+        handler.removeCallbacks(updateTextRunnable)
+        super.onDestroy()
+        windowManager.removeViewImmediate(overlayView) //Servisi kapattığımız için package name yazısını da kaldırdık.
+    }
 
     companion object {
         const val CHANNEL_ID = "com.example.overlayservice.toren"
     }
-
-
 }
